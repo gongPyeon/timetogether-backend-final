@@ -63,7 +63,7 @@ class GroupManageControllerTest extends RestDocsSupport {
     void setupAuthentication() {
         RegisterUserCommand dto = new RegisterUserCommand(
                 "xpxp_id_1", "xpxp@example.com",
-                "010-1234-5678", "xpxp", Provider.GENERAL, Role.USER, "18", Gender.FEMALE
+                "010-1234-5678", "xpxp", Provider.GENERAL, Role.USER, "18", Gender.FEMALE, null, null, null
         );
         User user = new User(dto);
         RegisterResponse registerResponse = RegisterResponse.from(user);
@@ -85,7 +85,7 @@ class GroupManageControllerTest extends RestDocsSupport {
             // given
             RegisterUserCommand dto = new RegisterUserCommand(
                     "ImManager", "immanager@example.com",
-                    "010-1234-5678", "ImManager", Provider.GENERAL, Role.USER, "25", Gender.FEMALE
+                    "010-1234-5678", "ImManager", Provider.GENERAL, Role.USER, "25", Gender.FEMALE, null, null, null
             );
             User user = new User(dto);
             RegisterResponse registerResponse = RegisterResponse.from(user);
@@ -195,6 +195,7 @@ class GroupManageControllerTest extends RestDocsSupport {
                     "333571d9-a517-4e7f-94a3-d71aba508940",
                     "toefl(수정됨제목)",
                     "toefl(수정됨이미지)",
+                    "토플 스터디 설명",
                     "xpxp_id_1",
                     List.of(
                             "FyK5/hMWlJBXsh0uh75Pmz3d5+53FDwtrA==",
@@ -207,7 +208,7 @@ class GroupManageControllerTest extends RestDocsSupport {
 
             RegisterUserCommand dto = new RegisterUserCommand(
                     "xpxp_id_1", "xpxp@example.com",
-                    "010-1234-5678", "xpxp", Provider.GENERAL, Role.USER, "18", Gender.FEMALE
+                    "010-1234-5678", "xpxp", Provider.GENERAL, Role.USER, "18", Gender.FEMALE, null, null, null
             );
 
             User user = new User(dto);
@@ -271,8 +272,7 @@ class GroupManageControllerTest extends RestDocsSupport {
             CreateGroup1Request requestDto = new CreateGroup1Request(
                     "toefl",
                     "토플 읽기",
-                    "토플 이미지",
-                    "토플 목표 점수 105"
+                    "토플 이미지"
             );
 
             CreateGroup1Response responseDto = new CreateGroup1Response(groupId);
@@ -282,7 +282,7 @@ class GroupManageControllerTest extends RestDocsSupport {
 
             RegisterUserCommand dto = new RegisterUserCommand(
                     "xpxp_id_1", "xpxp@example.com",
-                    "010-1234-5678", "xpxp", Provider.GENERAL, Role.USER, "18", Gender.FEMALE
+                    "010-1234-5678", "xpxp", Provider.GENERAL, Role.USER, "18", Gender.FEMALE, null, null, null
             );
 
             User user = new User(dto);
@@ -359,7 +359,7 @@ class GroupManageControllerTest extends RestDocsSupport {
 
             RegisterUserCommand dto = new RegisterUserCommand(
                     "xpxp_id_1", "user2@example.com",
-                    "010-9876-5432", "xpxp", Provider.GENERAL, Role.USER, "10", Gender.MALE
+                    "010-9876-5432", "xpxp", Provider.GENERAL, Role.USER, "10", Gender.MALE, null, null, null
             );
 
             User user = new User(dto);
@@ -435,7 +435,7 @@ class GroupManageControllerTest extends RestDocsSupport {
             // 사용자 인증 principal 세팅
             RegisterUserCommand dto = new RegisterUserCommand(
                     "xpxp_id_1", "user2@example.com",
-                    "010-9876-5432", "xpxp", Provider.GENERAL, Role.USER, "10", Gender.MALE
+                    "010-9876-5432", "xpxp", Provider.GENERAL, Role.USER, "10", Gender.MALE, null, null, null
             );
             User user = new User(dto);
             RegisterResponse registerResponse = RegisterResponse.from(user);
@@ -497,7 +497,7 @@ class GroupManageControllerTest extends RestDocsSupport {
 
             RegisterUserCommand dto = new RegisterUserCommand(
                     "xpxp_id_1", "user@example.com",
-                    "010-1234-5678", "xpxp", Provider.GENERAL, Role.USER, "10", Gender.MALE
+                    "010-1234-5678", "xpxp", Provider.GENERAL, Role.USER, "10", Gender.MALE, null, null, null
             );
             User user = new User(dto);
             UserPrincipal userPrincipal = new UserPrincipal(RegisterResponse.from(user));

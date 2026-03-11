@@ -20,7 +20,7 @@ public class UserFixture {
 
     public static User userById(String userId){
         return new User(new RegisterUserCommand(userId, USER_EMAIL, USER_PHONE,
-                USER_NICKNAME, USER_PROVIDER, USER_ROLE, USER_AGE, USER_GENDER));
+                USER_NICKNAME, USER_PROVIDER, USER_ROLE, USER_AGE, USER_GENDER, null, null, null));
     }
     public static User userByRegisterCommand(RegisterUserCommand registerUserCommand){
         return new User(registerUserCommand);
@@ -28,6 +28,6 @@ public class UserFixture {
 
     public static RegisterUserCommand registerUserCommand(String userId){
         return new RegisterUserCommand(userId, USER_EMAIL, USER_PHONE,
-                USER_NICKNAME, USER_PROVIDER, USER_ROLE, USER_AGE, USER_GENDER);
+                USER_NICKNAME, USER_PROVIDER, USER_ROLE, USER_AGE, USER_GENDER, null, null, null);
     }
 }

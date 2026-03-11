@@ -36,7 +36,7 @@ class CustomUserDetailServiceTest {
         void success(){
             // given
             String userId = "test";
-            RegisterResponse response = new RegisterResponse(userId, "test", "test@konkuk.co.kr", "pwd", null, Role.USER);
+            RegisterResponse response = new RegisterResponse(userId, "test", "test@konkuk.co.kr", "pwd", null, Role.USER, null, null, null);
             when(userRegisterService.getRegisterUser(userId)).thenReturn(response);
 
             // when
