@@ -1,118 +1,126 @@
 <div align="center">
 
-<!-- logo -->
 <img src="https://user-images.githubusercontent.com/80824750/208554611-f8277015-12e8-48d2-b2cc-d09d67f03c02.png" width="400"/>
 
-### 밋나우 
+### TimeTogether (밋나우) - Backend
 
-[<img src="https://img.shields.io/badge/release-v0.0.1-yellow?style=flat&logo=google-chrome&logoColor=white" />]()
-<br/> [<img src="https://img.shields.io/badge/프로젝트 기간-2024.09.01~2025.12.19-green?style=flat&logo=&logoColor=white" />]()
+**DB가 탈취되어도 사용자 관계를 알 수 없는, 프라이버시 중심 그룹 약속 조율 플랫폼**
 
-</div> 
+[<img src="https://img.shields.io/badge/Java-17-007396?style=flat-square&logo=openjdk&logoColor=white"/>]()
+[<img src="https://img.shields.io/badge/Spring Boot-3.4.1-6DB33F?style=flat-square&logo=springboot&logoColor=white"/>]()
+[<img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql&logoColor=white"/>]()
+[<img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white"/>]()
+[<img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white"/>]()
+[<img src="https://img.shields.io/badge/AWS-232F3E?style=flat-square&logo=amazonwebservices&logoColor=white"/>]()
 
-## 📝 소개
-밋나우 백엔드 깃 레파지토리 입니다.
+</div>
 
-- 프로젝트 소개
-- 프로젝트 API 설계
-- 사용한 기술 스택
-- 프로젝트 아키텍쳐
-- 기술적 이슈와 해결 과정
-- 프로젝트 팀원
+<br/>
 
-<br />
-<!--
-> 화면 구성과 프로토 타입 중 원하는 것을 사용해주세요.
+## 프로젝트 소개
 
-### 화면 구성
-|Screen #1|Screen #2|
+TimeTogether는 그룹 내에서 약속 일정과 장소를 협업적으로 조율할 수 있는 플랫폼입니다.
+
+단순한 일정 관리 서비스와 차별화되는 핵심 가치는 **다단계 암호화 아키텍처**입니다. DB가 탈취되더라도 "누가 어떤 그룹에 속해있는지", "누가 어떤 약속에 참여하는지"를 알 수 없도록 설계했습니다.
+
+### 주요 기능
+- **그룹 관리** - 그룹 생성/조회/편집, 멤버 관리
+- **약속 조율** - 약속 생성, 참여자 관리, 상태 추적(시간/장소/확정)
+- **시간 투표** - 참여자별 가능 시간 입력, 겹치는 시간대 조회, 개인 캘린더 연동
+- **장소 투표** - 장소 제안(최대 5개), 투표, 별점 평가, AI 기반 장소 추천
+- **소셜 로그인** - Google / Naver / Kakao OAuth2 + 일반 로그인
+
+<br/>
+
+## 핵심 기술적 도전
+
+### 1. 다단계 암호화 아키텍처
+
+> **문제**: 일반적인 설계에서는 DB가 유출되면 `user_id → group_id → promise_id` 관계가 그대로 노출됩니다.
+
+> **해결**: 3계층 키 구조 + Proxy 테이블로 사용자-리소스 매핑을 암호화했습니다.
+
+```
+[사용자 개인키]  →  [그룹/약속 암호화키]  →  [암호화된 ID 매핑]
+   (클라이언트)        (ShareKey 테이블)       (ProxyUser 테이블)
+```
+
+| 구성 요소 | 역할 |
+|:---:|:---|
+| `GroupProxyUser` / `PromiseProxyUser` | 사용자-리소스 매핑을 암호화하여 저장 |
+| `GroupShareKey` / `PromiseShareKey` | 암호화된 그룹/약속 키를 사용자별로 분배 |
+| **Multi-Step API** | 그룹 조회 3단계, 약속 생성 4단계로 키 교환 수행 |
+
+**성과**:
+- 평문 ID 노출 경로 **100% 제거**
+- 4단계 약속 생성 API 평균 응답시간 **5.04ms** (단일 API 대비 x1.9)
+- 100명 동시 접속 부하 테스트: 평균 **126.9ms**, 에러율 **0%**, **1,165 TPS**
+
+<br/>
+
+### 2. JWT + OAuth2 인증 체계
+
+```
+[ExceptionHandlerFilter] → [JwtAuthenticationFilter] → [Spring Security Filters]
+```
+
+- **Dual Token 전략**: Access Token(헤더) + Refresh Token(HttpOnly Cookie)
+- **Redis 기반 토큰 블랙리스트**: Stateless JWT 환경에서 안전한 로그아웃 구현
+- **로그인 시도 제한**: 반복 실패 시 계정 잠금
+- **OAuth2 팩토리 패턴**: `OAuthClientFactory`로 3개 소셜 프로바이더 유연하게 확장
+
+<br/>
+
+### 3. 필드 레벨 암호화
+
+사용자 민감 정보(이메일, 전화번호, 프로필 이미지)에 **AES + IV(Initialization Vector)** 적용으로 동일한 평문이라도 매번 다른 암호문을 생성합니다.
+
+<br/>
+
+## 기술 스택
+
+| 영역 | 기술 |
+|:---:|:---|
+| **Language & Framework** | Java 17, Spring Boot 3.4.1, Spring Security 6.x, Spring Data JPA |
+| **Database** | MySQL 8.0, Redis (Lettuce), QueryDSL 5.0.0 |
+| **Authentication** | JWT (JJWT 0.11.5), OAuth2 Client (Google, Naver, Kakao), BCrypt |
+| **Infra & Deploy** | AWS EC2, RDS, S3, Docker, Nginx |
+| **Documentation** | SpringDoc OpenAPI 3.0 (Swagger), Spring REST Docs |
+| **Testing** | JUnit 5, Mockito, MockMvc |
+
+<br/>
+
+## 프로젝트 구조
+
+```
+src/main/java/timetogeter/
+├── context/                    # 도메인 기반 모듈
+│   ├── auth/                   # 인증 (회원가입, 로그인, OAuth2)
+│   ├── group/                  # 그룹 관리 (생성, 조회, 멤버)
+│   ├── promise/                # 약속 조율 (생성, 키교환, 상태관리)
+│   ├── place/                  # 장소 (제안, 투표, 별점, AI추천)
+│   ├── time/                   # 시간 (가용시간, 투표, 확정)
+│   └── schedule/               # 일정 (확정된 약속 캘린더)
+└── global/                     # 공통 모듈
+    ├── security/               # JWT 필터, OAuth2, 인증 설정
+    ├── config/                 # Redis, QueryDSL, Swagger 설정
+    ├── interceptor/            # 요청/응답 처리
+    └── common/                 # 유틸리티, 예외 처리
+```
+
+각 도메인 모듈은 **Presentation(Controller) - Application(Service, DTO) - Domain(Entity, Repository)** 3계층으로 구성됩니다.
+
+<br/>
+
+## 프로젝트 규모
+
+| 항목 | 수치 |
 |:---:|:---:|
-|<img src="https://user-images.githubusercontent.com/80824750/208456048-acbf44a8-cd71-4132-b35a-500047adbe1c.gif" width="400"/>|<img src="https://user-images.githubusercontent.com/80824750/208456234-fb5fe434-aa65-4d7a-b955-89098d5bbe0b.gif" width="400"/>|
+| Java 파일 | 337개 |
+| 코드 라인 | 14,188 LOC |
+| API 엔드포인트 | 72개 |
+| 엔티티 | 32개 |
+| 커스텀 예외 | 21개 |
+| 테스트 메서드 | 42개 |
 
-### 프로토타입
-<img src="https://user-images.githubusercontent.com/80824750/208454673-0449e49c-57c6-4a6b-86cf-66c5b1e623dc.png">
-
-<br />
--->
-
-## 🗂️ APIs
-작성한 API는 아래에서 확인할 수 있습니다.
-
-👉🏻 [API 바로보기](/backend/APIs.md)
-
-### 🗂️ 개발 파일 중 .gitignore에 추가한 것들 (메모용-추후 지울 예정)
-
-
-<pre lang="md"> ## 📁 환경 설정 파일 구조 <code> 
-├── docker-compose.v2.yml # Docker Compose 설정 (배포용) 
-├── application.yml # Spring Boot 기본 설정 
-├── application-local.yml # 로컬 환경 설정 
-├── application-prod.yml # 배포 환경 설정 
-├── .env # 로컬 환경 변수 파일 
-├── .env.prod # 배포 환경 변수 파일 </code> > 
-
-⚠️ 위 파일들은 보안 및 환경 분리 목적상 `.gitignore`에 포함되어 Git에 커밋되지 않습니다. </pre>
-
-<br />
-
-## ⚙ 기술 스택
-<!--
-> skills 폴더에 있는 아이콘을 이용할 수 있습니다.
--->
-### Back-end
-<div>
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/Java.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/SpringBoot.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/SpringSecurity.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/SpringDataJPA.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/Mysql.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/Ajax.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/Thymeleaf.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/JWT.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/Swagger.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/Redis.png?raw=true" width="80">
-</div>
-
-### Infra
-<div>
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/AWSEC2.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/AWSRDS.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/Docker.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/Nginx.png?raw=true" width="80">
-</div>
-
-### Tools
-<div>
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/Github.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/Notion.png?raw=true" width="80">
-<img src="https://github.com/yewon-Noh/readme-template/blob/main/skills/Discord.png?raw=true" width="80">
-</div>
-
-<br />
-
-## 🛠️ 프로젝트 아키텍쳐
-최종안 생성중
-![no-image](https://user-images.githubusercontent.com/80824750/208294567-738dd273-e137-4bbf-8307-aff64258fe03.png)
-
-
-
-<br />
-
-## 🤔 기술적 이슈와 해결 과정
-- 배포 과정 중 고민 부분들
-    - [codedeploy vs docker]()
-<!--
-- Gmail STMP 이용하여 이메일 전송하기
-    - [gmail 보내기](https://velog.io/@yewo2nn16/Email-이메일-전송하기with-첨부파일)
-- AWS EC2에 배포하기
-    - [서버 배포하기-1](https://velog.io/@yewo2nn16/SpringBoot-서버-배포)
-    - [서버 배포하기-2](https://velog.io/@yewo2nn16/SpringBoot-서버-배포-인텔리제이에서-jar-파일-빌드해서-배포하기)
-
--->
-<br />
-
-## 💁‍♂️ 프로젝트 팀원
-|                    Backend                    |                   Backend                    |
-|:---------------------------------------------:|:---------------------------------------------:|
-| <img src="https://github.com/gongPyeon.png" width="80"/> | <img src="https://github.com/Hyeri1ee.png" width="80"/> |
-|      [편강](https://github.com/gongPyeon)       |      [이혜리](https://github.com/Hyeri1ee)       |
+<br/>
